@@ -115,7 +115,10 @@
             </div>
           </div>
 
-          <div *ngIf="checkingAvailability" class="status-checking">Verificando disponibilidad...</div>
+          <div *ngIf="checkingAvailability" class="status-checking">
+            <div class="spinner"></div>
+            Verificando disponibilidad...
+          </div>
           <div *ngIf="!checkingAvailability && availability" class="availability-message" [ngClass]="availability.available ? 'success' : 'error'">
             {{ availability.message }}
           </div>
@@ -207,47 +210,136 @@
   <div class="payment-modal-overlay" *ngIf="showPaymentModal" (click)="showPaymentModal = false">
     <div class="payment-modal" (click)="$event.stopPropagation()">
       <div class="payment-modal-header">
-        <h3>💳 Pasarela de Pago</h3>
-        <button class="close-modal" (click)="showPaymentModal = false">✕</button>
+        <div class="header-title">
+          <span class="card-icon">💳</span>
+          <h3>Pasarela de Pago</h3>
+        </div>
+        <button class="close-modal-round" (click)="showPaymentModal = false">✕</button>
       </div>
 
       <div class="payment-modal-body">
-        <div class="payment-summary">
-          <h4>Resumen de la Cita</h4>
-          <div class="summary-item"><span>Especialidad:</span><strong>Sujeto a elección</strong></div>
-          <div class="summary-item total"><span>Total a pagar:</span><strong>S/ 50.00</strong></div>
+        <div class="payment-summary-card">
+          <h4>RESUMEN DE LA CITA</h4>
+          <div class="summary-details">
+            <div class="summary-row">
+              <span class="label">Especialidad:</span>
+              <span class="value">{{ getSelectedSpecialtyName() }}</span>
+            </div>
+            <div class="summary-row">
+              <span class="label">Médico:</span>
+              <span class="value">{{ getSelectedDoctorName() }}</span>
+            </div>
+            <div class="summary-row">
+              <span class="label">Fecha:</span>
+              <span class="value">{{ citaFecha }}</span>
+            </div>
+            <div class="summary-row">
+              <span class="label">Turno:</span>
+              <span class="value">{{ getFormattedTurno() }}</span>
+            </div>
+            <div class="divider-line"></div>
+            <div class="summary-row total-row">
+              <span class="label">Total a pagar:</span>
+              <span class="total-value">S/ 50.00</span>
+            </div>
+          </div>
         </div>
 
-        <div class="payment-methods">
+        <div class="payment-selection">
           <h4>Seleccione método de pago</h4>
-          <div class="payment-options">
-            <label class="payment-option" [class.selected]="metodoPago === 'tarjeta_debito'">
-              <input type="radio" [(ngModel)]="metodoPago" name="metodoPago" value="tarjeta_debito" />
-              <span>💳 Tarjeta</span>
+          <div class="payment-methods-grid">
+            <label class="method-card" [class.selected]="metodoPago === 'tarjeta_debito'">
+              <input type="radio" [(ngModel)]="metodoPago" name="metodoPago" value="tarjeta_debito" class="hidden-radio" />
+              <div class="radio-circle"></div>
+              <span class="method-icon">💳</span>
+              <span class="method-label">Tarjeta de Débito</span>
             </label>
-            <label class="payment-option" [class.selected]="metodoPago === 'billetera_digital'">
-              <input type="radio" [(ngModel)]="metodoPago" name="metodoPago" value="billetera_digital" />
-              <span>📱 Billeteras</span>
+            <label class="method-card" [class.selected]="metodoPago === 'tarjeta_credito'">
+              <input type="radio" [(ngModel)]="metodoPago" name="metodoPago" value="tarjeta_credito" class="hidden-radio" />
+              <div class="radio-circle"></div>
+              <span class="method-icon">💳</span>
+              <span class="method-label">Tarjeta de Crédito</span>
+            </label>
+            <label class="method-card" [class.selected]="metodoPago === 'transferencia'">
+              <input type="radio" [(ngModel)]="metodoPago" name="metodoPago" value="transferencia" class="hidden-radio" />
+              <div class="radio-circle"></div>
+              <span class="method-icon">🏦</span>
+              <span class="method-label">Transferencia Bancaria</span>
+            </label>
+            <label class="method-card" [class.selected]="metodoPago === 'billetera_digital'">
+              <input type="radio" [(ngModel)]="metodoPago" name="metodoPago" value="billetera_digital" class="hidden-radio" />
+              <div class="radio-circle"></div>
+              <span class="method-icon">📱</span>
+              <span class="method-label">Billeteras Digitales</span>
             </label>
           </div>
         </div>
 
-        <div *ngIf="metodoPago === 'billetera_digital'" class="payment-fields">
-          <label>Billetera:</label>
-          <select [(ngModel)]="billeteraEspecifica">
-            <option value="yape">Yape</option>
-            <option value="plin">Plin</option>
-          </select>
-          <div class="form-group" style="margin-top: 15px;">
-            <label>Número de operación:</label>
-            <input type="text" [(ngModel)]="numeroTransaccion" placeholder="123456" />
+        <!-- Campos adicionales para Billeteras Digitales (si se seleccionan) -->
+        <div *ngIf="metodoPago === 'billetera_digital'" class="extra-fields-card">
+          <label class="section-label">Seleccione su billetera:</label>
+          <div class="wallet-options-grid">
+            <label class="wallet-card" [class.selected]="billeteraEspecifica === 'yape'">
+              <input type="radio" [(ngModel)]="billeteraEspecifica" name="billetera" value="yape" class="hidden-radio" />
+              <div class="radio-circle"></div>
+              <img src="yape-logo.png" alt="Yape" class="wallet-logo" />
+              <span class="wallet-name">Yape</span>
+            </label>
+            <label class="wallet-card" [class.selected]="billeteraEspecifica === 'plin'">
+              <input type="radio" [(ngModel)]="billeteraEspecifica" name="billetera" value="plin" class="hidden-radio" />
+              <div class="radio-circle"></div>
+              <img src="plin-logo.png" alt="Plin" class="wallet-logo" />
+              <span class="wallet-name">Plin</span>
+            </label>
+          </div>
+          <div class="form-group-compact mt-20" *ngIf="billeteraEspecifica === 'yape'">
+            <label>Código de Aprobación</label>
+            <input type="text" [(ngModel)]="numeroTransaccion" placeholder="Ingrese el código de aprobación" />
+          </div>
+
+          <div class="qr-payment-section">
+            <p class="qr-instruction">Escanea el código QR para pagar con {{ billeteraEspecifica === 'yape' ? 'Yape' : 'Plin' }}</p>
+            <div class="qr-card">
+              <img [src]="billeteraEspecifica === 'yape' ? 'qr-yape.png' : 'qr-plin.png'" alt="QR Code" class="qr-image" />
+              <p class="qr-amount">Monto: S/ 50.00</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Formulario de Transferencia Bancaria -->
+        <div *ngIf="metodoPago === 'transferencia'" class="extra-fields-card">
+          <div class="form-group-compact">
+            <label>Número de Transacción</label>
+            <input type="text" [(ngModel)]="numeroTransaccion" placeholder="Ingrese el número de transacción" />
+          </div>
+        </div>
+
+        <!-- Formulario de Tarjeta (Débito o Crédito) -->
+        <div *ngIf="metodoPago === 'tarjeta_debito' || metodoPago === 'tarjeta_credito'" class="extra-fields-card card-form">
+          <div class="form-group-compact">
+            <label>Número de Tarjeta</label>
+            <input type="text" [(ngModel)]="numeroTarjeta" placeholder="0000 0000 0000 0000" maxlength="19" />
+          </div>
+          <div class="form-row-compact">
+            <div class="form-group-compact">
+              <label>Fecha de Expiración</label>
+              <input type="text" [(ngModel)]="fechaExpiracion" placeholder="MM/AA" maxlength="5" />
+            </div>
+            <div class="form-group-compact">
+              <label>CVV</label>
+              <input type="password" [(ngModel)]="cvv" placeholder="123" maxlength="4" />
+            </div>
+          </div>
+          <div class="form-group-compact">
+            <label>Nombre del Titular</label>
+            <input type="text" [(ngModel)]="nombreTitular" placeholder="Como aparece en la tarjeta" />
           </div>
         </div>
       </div>
 
       <div class="payment-modal-footer">
-        <button class="btn-secondary" (click)="showPaymentModal = false">Cancelar</button>
-        <button class="btn-primary" [disabled]="processingPayment" (click)="handleConfirmPayment()">
+        <button class="btn-cancel" (click)="showPaymentModal = false">Cancelar</button>
+        <button class="btn-confirm" [disabled]="processingPayment || !metodoPago" (click)="handleConfirmPayment()">
           {{ processingPayment ? 'Procesando...' : 'Confirmar Pago' }}
         </button>
       </div>

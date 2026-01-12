@@ -136,4 +136,18 @@ export class HomeComponent {
             el.scrollIntoView({ behavior: 'smooth' });
         }
     }
+
+    scrollToAcerca() {
+        const el = document.getElementById('acerca');
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    scrollToContacto() {
+        const el = document.getElementById('contacto');
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
 }

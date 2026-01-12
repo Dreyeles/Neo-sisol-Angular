@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
@@ -37,19 +37,22 @@ export class PatientDashboardComponent implements OnInit {
 
     // Payment modal states
     showPaymentModal = false;
-    metodoPago = '';
-    billeteraEspecifica = '';
-    numeroTarjeta = '';
-    fechaExpiracion = '';
-    cvv = '';
-    nombreTitular = '';
-    numeroTransaccion = '';
+    metodoPago: string = '';
+    billeteraEspecifica: string = 'yape';
+    numeroTransaccion: string = '';
+
+    // Card details
+    numeroTarjeta: string = '';
+    fechaExpiracion: string = '';
+    cvv: string = '';
+    nombreTitular: string = '';
     processingPayment = false;
 
     constructor(
         private authService: AuthService,
         private appointmentService: AppointmentService,
-        private router: Router
+        private router: Router,
+        private cdr: ChangeDetectorRef
     ) { }
 
     ngOnInit(): void {
@@ -102,6 +105,22 @@ export class PatientDashboardComponent implements OnInit {
         // Aquí iría la lógica real de descarga
     }
 
+    getSelectedSpecialtyName(): string {
+        const esp = this.especialidades.find(e => e.id_especialidad === Number(this.citaEspecialidad));
+        return esp ? esp.nombre : 'No especificado';
+    }
+
+    getSelectedDoctorName(): string {
+        const med = this.medicos.find(m => m.id_medico === Number(this.citaMedico));
+        return med ? `Dr. ${med.nombres} ${med.apellidos}` : 'No especificado';
+    }
+
+    getFormattedTurno(): string {
+        if (this.citaTurno === 'manana') return 'Mañana (7:00 AM - 12:00 PM)';
+        if (this.citaTurno === 'tarde') return 'Tarde (2:00 PM - 7:00 PM)';
+        return 'No especificado';
+    }
+
     setActiveSection(section: string) {
         this.activeSection = section;
     }
@@ -124,27 +143,43 @@ export class PatientDashboardComponent implements OnInit {
     }
 
     checkAvailability() {
+        // Reset availability state when inputs change
+        this.availability = null;
+
         if (!this.citaMedico || !this.citaFecha || !this.citaTurno) {
-            this.availability = null;
             return;
         }
 
         this.checkingAvailability = true;
+
         this.appointmentService.checkAvailability({
             id_medico: Number(this.citaMedico),
             fecha: this.citaFecha,
             turno: this.citaTurno
         }).subscribe({
             next: (res) => {
-                if (res.status === 'OK') {
-                    this.availability = {
-                        available: res.available,
-                        message: res.message
-                    };
-                }
-                this.checkingAvailability = false;
+                // Extended delay of 1.5s as requested for better UX
+                setTimeout(() => {
+                    if (res.status === 'OK') {
+                        this.availability = {
+                            available: res.available,
+                            message: res.message
+                        };
+                    }
+                    this.checkingAvailability = false;
+                    this.cdr.detectChanges(); // Force UI update
+                }, 1500);
             },
-            error: () => this.checkingAvailability = false
+            error: () => {
+                setTimeout(() => {
+                    this.checkingAvailability = false;
+                    this.availability = {
+                        available: false,
+                        message: 'Error al verificar disponibilidad'
+                    };
+                    this.cdr.detectChanges(); // Force UI update
+                }, 1500);
+            }
         });
     }
 

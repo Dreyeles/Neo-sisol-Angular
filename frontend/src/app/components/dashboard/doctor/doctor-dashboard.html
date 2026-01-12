@@ -1,83 +1,108 @@
 <div class="dashboard doctor-dashboard">
-  <div class="dashboard-sidebar">
-    <div class="sidebar-header">
-      <img src="/logo.svg" alt="Neo SISOL" class="sidebar-logo" />
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+        <span class="logo-text">SISOL<span class="logo-sub">SALUD</span></span>
+      </div>
     </div>
+    
     <nav class="sidebar-nav">
-      <button
-        class="nav-item"
-        [class.active]="activeSection === 'agenda'"
-        (click)="setActiveSection('agenda')"
-      >
-        📅 Mi Agenda
+      <button class="nav-item" [class.active]="activeSection === 'agenda'" (click)="setActiveSection('agenda')">
+        <span class="nav-icon">📅</span> Mi Agenda
       </button>
-      <button
-        class="nav-item"
-        [class.active]="activeSection === 'pacientes'"
-        (click)="setActiveSection('pacientes')"
-      >
-        👥 Mis Pacientes
+      <button class="nav-item" [class.active]="activeSection === 'pacientes'" (click)="setActiveSection('pacientes')">
+        <span class="nav-icon">👥</span> Mis Pacientes
       </button>
-      <button
-        class="nav-item"
-        [class.active]="activeSection === 'perfil'"
-        (click)="setActiveSection('perfil')"
-      >
-        👤 Mi Perfil
+      <button class="nav-item" [class.active]="activeSection === 'historial'" (click)="setActiveSection('historial')">
+        <span class="nav-icon">📋</span> Historial Médico
+      </button>
+      <button class="nav-item" [class.active]="activeSection === 'perfil'" (click)="setActiveSection('perfil')">
+        <span class="nav-icon">👤</span> Mi Perfil
       </button>
     </nav>
+
+    <div class="sidebar-spacer"></div>
+
     <div class="sidebar-footer">
-      <button class="logout-button" (click)="onLogout()">
-        Cerrar Sesión
+      <button class="btn-logout" (click)="onLogout()">
+        <span class="logout-icon">↪</span> Cerrar Sesión
       </button>
     </div>
-  </div>
+  </aside>
 
+  <!-- Main Content -->
   <div class="dashboard-content">
-    <header class="dashboard-header">
-      <div>
-        <h1>Bienvenido, Dr. {{ user?.nombre || 'Médico' }}</h1>
-        <p>Panel Médico</p>
+    <header class="dashboard-top-header">
+      <div class="welcome-text">
+        <h1>Bienvenido, Dr. {{ user?.nombre || 'Beatriz' }}</h1>
+        <p class="subtitle">Panel Médico</p>
       </div>
     </header>
 
-    <main class="dashboard-main">
+    <main class="dashboard-main-area">
       <!-- Agenda Section -->
-      <div *ngIf="activeSection === 'agenda'" class="section-content">
-        <h2>Agenda del Día</h2>
-        <div class="citas-list">
-          <div *ngIf="loadingCitas">Cargando agenda...</div>
-          <div *ngIf="!loadingCitas && citas.length === 0" class="empty-state">
+      <section *ngIf="activeSection === 'agenda'" class="agenda-section">
+        <h2 class="section-title">Agenda del Día</h2>
+        
+        <div class="appointments-container">
+          <div *ngIf="loadingCitas" class="loading-state">Cargando agenda...</div>
+          
+          <div *ngIf="!loadingCitas && citas.length === 0" class="empty-agenda">
             <p>No tienes citas programadas para hoy</p>
           </div>
-          <div *ngFor="let cita of citas" class="cita-card">
-            <div class="cita-info">
-              <h3>{{ cita.paciente_nombre }} {{ cita.paciente_apellido }}</h3>
-              <p>Motivo: {{ cita.motivo_consulta }}</p>
-              <p class="cita-fecha">📅 {{ cita.fecha_cita | date:'dd/MM/yyyy' }} - {{ cita.hora_cita }}</p>
-              <span class="historial-status" [ngClass]="cita.estado">{{ cita.estado }}</span>
+
+          <div *ngFor="let cita of citas" class="appointment-card">
+            <div class="appointment-details">
+              <h3 class="patient-name">Paciente: {{ cita.paciente_nombre }} {{ cita.paciente_apellido }}</h3>
+              <p class="appointment-reason">Motivo: {{ cita.motivo_consulta }}</p>
+              <div class="appointment-meta">
+                <span class="meta-item"><span class="meta-icon">🗓️</span> {{ cita.fecha_cita | date:'dd \'de\' MMMM \'de\' yyyy' }}</span>
+                <span class="meta-item"><span class="meta-icon">🕒</span> {{ cita.hora_cita }}</span>
+              </div>
+              <span class="status-badge" [ngClass]="cita.estado">{{ cita.estado }}</span>
             </div>
-            <div class="cita-actions">
-              <button class="btn-primary" (click)="handleIniciarConsulta(cita)">Iniciar Consulta</button>
+            
+            <div class="appointment-actions">
+              <button class="btn-action btn-start" (click)="handleIniciarConsulta(cita)">Iniciar Consulta</button>
+              <button class="btn-action btn-history" (click)="activeSection = 'pacientes'">Ver Historia</button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- Mis Pacientes Section -->
-      <div *ngIf="activeSection === 'pacientes'" class="section-content">
-        <h2>Pacientes Atendidos</h2>
-        <div class="pacientes-list">
-          <div *ngIf="loadingPacientes">Cargando pacientes...</div>
-          <div *ngFor="let pte of pacientes" class="cita-card">
-             <div class="cita-info">
-                <h3>{{ pte.nombres }} {{ pte.apellidos }}</h3>
-                <p>DNI: {{ pte.dni }}</p>
-                <p>Última visita: {{ pte.ultima_cita | date:'dd/MM/yyyy' }}</p>
-             </div>
+      <section *ngIf="activeSection === 'pacientes'" class="patients-section">
+        <h2 class="section-title">Mis Pacientes Atendidos</h2>
+        
+        <div class="patients-grid">
+          <div *ngIf="loadingPacientes" class="loading-state">Cargando pacientes...</div>
+          
+          <div *ngFor="let pte of pacientes" class="patient-card">
+            <div class="patient-profile">
+              <div class="profile-icon">
+                <svg viewBox="0 0 24 24" class="user-svg">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="patient-info">
+              <h3 class="patient-card-name">{{ pte.nombres }}<br>{{ pte.apellidos }}</h3>
+              <div class="patient-meta-details">
+                <p class="meta-row"><span class="label">DNI:</span> <span class="value">{{ pte.dni }}</span></p>
+                <p class="meta-row"><span class="label">Última visita:</span> <span class="value">{{ pte.ultima_cita | date:'dd/MM/yyyy' }}</span></p>
+              </div>
+            </div>
+
+            <div class="patient-actions">
+              <button class="btn-view-medical" (click)="handleIniciarConsulta(pte)">
+                Ver Atención Médica
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- Perfil Section -->
       <div *ngIf="activeSection === 'perfil'" class="section-content">

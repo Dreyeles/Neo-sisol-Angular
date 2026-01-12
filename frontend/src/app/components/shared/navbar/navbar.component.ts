@@ -12,6 +12,9 @@ export class NavbarComponent {
     @Output() loginClick = new EventEmitter<void>();
     @Output() registerClick = new EventEmitter<void>();
     @Output() serviciosClick = new EventEmitter<void>();
+    @Output() acercaClick = new EventEmitter<void>();
+    @Output() contactoClick = new EventEmitter<void>();
+
 
     isMenuOpen = false;
 
@@ -42,5 +45,17 @@ export class NavbarComponent {
             top: 0,
             behavior: 'smooth'
         });
+    }
+
+    handleAcercaClick(event: Event) {
+        event.preventDefault();
+        this.isMenuOpen = false;
+        this.acercaClick.emit();
+    }
+
+    handleContactoClick(event: Event) {
+        event.preventDefault();
+        this.isMenuOpen = false;
+        this.contactoClick.emit();
     }
 }
