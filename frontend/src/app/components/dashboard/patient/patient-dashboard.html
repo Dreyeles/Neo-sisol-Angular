@@ -1,0 +1,256 @@
+<div class="dashboard">
+  <div class="dashboard-sidebar">
+    <div class="sidebar-header">
+      <img src="/logo.svg" alt="Neo SISOL" class="sidebar-logo" />
+    </div>
+    <nav class="sidebar-nav">
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'citas'"
+        (click)="setActiveSection('citas')"
+      >
+        📅 Mis Citas
+      </button>
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'agendar'"
+        (click)="setActiveSection('agendar')"
+      >
+        ➕ Agendar Cita
+      </button>
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'perfil'"
+        (click)="setActiveSection('perfil')"
+      >
+        👤 Mi Perfil
+      </button>
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'historial'"
+        (click)="setActiveSection('historial'); loadCitas()"
+      >
+        📋 Historial
+      </button>
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'resultados'"
+        (click)="setActiveSection('resultados')"
+      >
+        🔬 Resultados
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-button" (click)="onLogout()">
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+
+  <div class="dashboard-content">
+    <header class="dashboard-header">
+      <div>
+        <h1>Bienvenido, {{ user?.nombre || 'Usuario' }}</h1>
+        <p>Panel de Paciente</p>
+      </div>
+    </header>
+
+    <main class="dashboard-main">
+      <!-- Mis Citas Section -->
+      <div *ngIf="activeSection === 'citas'" class="section-content">
+        <h2>Mis Próximas Citas</h2>
+        <div class="citas-list">
+          <div *ngIf="loadingCitas">Cargando citas...</div>
+          <div *ngIf="!loadingCitas && proximasCitas.length === 0" class="empty-state">
+            <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
+            <p>No tienes ninguna cita agendada</p>
+            <button class="btn-primary" (click)="setActiveSection('agendar')">Agenda tu primera cita</button>
+          </div>
+          <div *ngFor="let cita of proximasCitas" class="cita-card">
+            <div class="cita-info">
+              <h3>{{ cita.especialidad }}</h3>
+              <p>Dr. {{ cita.medico_nombre }} {{ cita.medico_apellido }}</p>
+              <p class="cita-fecha">📅 {{ cita.fecha_cita | date:'dd/MM/yyyy' }} - {{ cita.hora_cita }}</p>
+            </div>
+            <div class="cita-actions">
+              <span class="historial-status" [ngClass]="cita.estado">{{ cita.estado }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agendar Section -->
+      <div *ngIf="activeSection === 'agendar'" class="section-content">
+        <h2>Agendar Nueva Cita</h2>
+        <form class="agendar-form" (ngSubmit)="handleAgendarCita()">
+          <div class="form-group">
+            <label>Especialidad</label>
+            <select [(ngModel)]="citaEspecialidad" name="especialidad" (change)="onEspecialidadChange()" required>
+              <option value="">Seleccione una especialidad</option>
+              <option *ngFor="let esp of especialidades" [value]="esp.id_especialidad">{{ esp.nombre }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Médico</label>
+            <select [(ngModel)]="citaMedico" name="medico" [disabled]="!citaEspecialidad || loadingMedicos" (change)="checkAvailability()" required>
+              <option value="">Seleccione un médico</option>
+              <option *ngFor="let med of medicos" [value]="med.id_medico">{{ med.nombres }} {{ med.apellidos }}</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fecha</label>
+              <input type="date" [(ngModel)]="citaFecha" name="fecha" (change)="checkAvailability()" required />
+            </div>
+
+            <div class="form-group">
+              <label>Turno</label>
+              <select [(ngModel)]="citaTurno" name="turno" (change)="checkAvailability()" required>
+                <option value="">Seleccione un turno</option>
+                <option value="manana">Mañana (7:00 AM - 12:00 PM)</option>
+                <option value="tarde">Tarde (2:00 PM - 7:00 PM)</option>
+              </select>
+            </div>
+          </div>
+
+          <div *ngIf="checkingAvailability" class="status-checking">Verificando disponibilidad...</div>
+          <div *ngIf="!checkingAvailability && availability" class="availability-message" [ngClass]="availability.available ? 'success' : 'error'">
+            {{ availability.message }}
+          </div>
+
+          <div class="form-group">
+            <label>Motivo de la consulta</label>
+            <textarea [(ngModel)]="citaMotivo" name="motivo" placeholder="Describa el motivo..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary" [disabled]="!availability?.available || checkingAvailability">
+            Agendar Cita
+          </button>
+        </form>
+      </div>
+
+      <!-- Perfil Section -->
+      <div *ngIf="activeSection === 'perfil'" class="section-content">
+        <div class="perfil-card">
+          <div class="perfil-header">
+            <div class="avatar">{{ user?.nombre?.charAt(0) }}</div>
+            <h3>{{ user?.nombre }} {{ user?.apellidos }}</h3>
+          </div>
+          <div class="perfil-info">
+            <div class="info-item"><label>DNI:</label><span>{{ user?.dni }}</span></div>
+            <div class="info-item"><label>Email:</label><span>{{ user?.email }}</span></div>
+            <div class="info-item"><label>Teléfono:</label><span>{{ user?.telefono }}</span></div>
+            <div class="info-item"><label>Dirección:</label><span>{{ user?.direccion }}</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- Historial Section -->
+      <div *ngIf="activeSection === 'historial'" class="section-content">
+        <h2>Historial de Citas</h2>
+        
+        <!-- Filter Bar -->
+        <div class="history-filters">
+          <div class="filter-group">
+            <label>Filtrar por Fecha</label>
+            <input type="date" [(ngModel)]="filterFecha" placeholder="dd/mm/aaaa" />
+          </div>
+          <div class="filter-group">
+            <label>Filtrar por Especialidad</label>
+            <select [(ngModel)]="filterEspecialidad">
+              <option value="">Todas las especialidades</option>
+              <option *ngFor="let esp of especialidades" [value]="esp.id_especialidad">{{ esp.nombre }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="history-list">
+          <div *ngIf="loadingCitas" class="loading-state">Cargando historial...</div>
+          <div *ngIf="!loadingCitas && filteredHistorial.length === 0" class="empty-state">
+            <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+            <p>No se encontraron citas con los filtros seleccionados.</p>
+          </div>
+          
+          <div *ngFor="let cita of filteredHistorial" class="history-card" [ngClass]="cita.estado">
+            <div class="card-indicator"></div>
+            <div class="card-main">
+              <div class="card-info">
+                <h3>{{ cita.especialidad }}</h3>
+                <p class="medico-name">Dr. {{ cita.medico_nombre }} {{ cita.medico_apellido }}</p>
+                <div class="card-meta">
+                  <span class="meta-item">🗓️ {{ cita.fecha_cita | date:'dd/MM/yyyy' }} - {{ cita.hora_cita }}</span>
+                </div>
+              </div>
+              <div class="card-status-info">
+                <span class="status-badge" [ngClass]="cita.estado">{{ cita.estado }}</span>
+                <button *ngIf="cita.estado === 'completada'" class="btn-download" (click)="descargarInforme(cita.id_cita)">
+                  📄 Descargar Informe
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="activeSection === 'resultados'" class="section-content">
+        <h2>Resultados Médicos</h2>
+        <div class="empty-state">
+          <div style="font-size: 48px; margin-bottom: 16px;">🔬</div>
+          <p>Tus resultados de laboratorio y exámenes aparecerán aquí.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de Pago -->
+  <div class="payment-modal-overlay" *ngIf="showPaymentModal" (click)="showPaymentModal = false">
+    <div class="payment-modal" (click)="$event.stopPropagation()">
+      <div class="payment-modal-header">
+        <h3>💳 Pasarela de Pago</h3>
+        <button class="close-modal" (click)="showPaymentModal = false">✕</button>
+      </div>
+
+      <div class="payment-modal-body">
+        <div class="payment-summary">
+          <h4>Resumen de la Cita</h4>
+          <div class="summary-item"><span>Especialidad:</span><strong>Sujeto a elección</strong></div>
+          <div class="summary-item total"><span>Total a pagar:</span><strong>S/ 50.00</strong></div>
+        </div>
+
+        <div class="payment-methods">
+          <h4>Seleccione método de pago</h4>
+          <div class="payment-options">
+            <label class="payment-option" [class.selected]="metodoPago === 'tarjeta_debito'">
+              <input type="radio" [(ngModel)]="metodoPago" name="metodoPago" value="tarjeta_debito" />
+              <span>💳 Tarjeta</span>
+            </label>
+            <label class="payment-option" [class.selected]="metodoPago === 'billetera_digital'">
+              <input type="radio" [(ngModel)]="metodoPago" name="metodoPago" value="billetera_digital" />
+              <span>📱 Billeteras</span>
+            </label>
+          </div>
+        </div>
+
+        <div *ngIf="metodoPago === 'billetera_digital'" class="payment-fields">
+          <label>Billetera:</label>
+          <select [(ngModel)]="billeteraEspecifica">
+            <option value="yape">Yape</option>
+            <option value="plin">Plin</option>
+          </select>
+          <div class="form-group" style="margin-top: 15px;">
+            <label>Número de operación:</label>
+            <input type="text" [(ngModel)]="numeroTransaccion" placeholder="123456" />
+          </div>
+        </div>
+      </div>
+
+      <div class="payment-modal-footer">
+        <button class="btn-secondary" (click)="showPaymentModal = false">Cancelar</button>
+        <button class="btn-primary" [disabled]="processingPayment" (click)="handleConfirmPayment()">
+          {{ processingPayment ? 'Procesando...' : 'Confirmar Pago' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

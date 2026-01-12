@@ -1,0 +1,14 @@
+{
+    "name": "neo-sisol-unificado",
+    "version": "1.0.0",
+    "description": "Script para ejecutar frontend y backend simultáneamente",
+    "scripts": {
+        "start:backend": "cd backend && npm run dev",
+        "start:frontend": "cd frontend && npm start",
+        "open:opera": "start opera http://localhost:4200",
+        "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\" \"npm run open:opera\""
+    },
+    "dependencies": {
+        "concurrently": "^8.2.2"
+    }
+}

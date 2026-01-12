@@ -1,0 +1,152 @@
+<div class="dashboard doctor-dashboard">
+  <div class="dashboard-sidebar">
+    <div class="sidebar-header">
+      <img src="/logo.svg" alt="Neo SISOL" class="sidebar-logo" />
+    </div>
+    <nav class="sidebar-nav">
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'agenda'"
+        (click)="setActiveSection('agenda')"
+      >
+        📅 Mi Agenda
+      </button>
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'pacientes'"
+        (click)="setActiveSection('pacientes')"
+      >
+        👥 Mis Pacientes
+      </button>
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'perfil'"
+        (click)="setActiveSection('perfil')"
+      >
+        👤 Mi Perfil
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-button" (click)="onLogout()">
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+
+  <div class="dashboard-content">
+    <header class="dashboard-header">
+      <div>
+        <h1>Bienvenido, Dr. {{ user?.nombre || 'Médico' }}</h1>
+        <p>Panel Médico</p>
+      </div>
+    </header>
+
+    <main class="dashboard-main">
+      <!-- Agenda Section -->
+      <div *ngIf="activeSection === 'agenda'" class="section-content">
+        <h2>Agenda del Día</h2>
+        <div class="citas-list">
+          <div *ngIf="loadingCitas">Cargando agenda...</div>
+          <div *ngIf="!loadingCitas && citas.length === 0" class="empty-state">
+            <p>No tienes citas programadas para hoy</p>
+          </div>
+          <div *ngFor="let cita of citas" class="cita-card">
+            <div class="cita-info">
+              <h3>{{ cita.paciente_nombre }} {{ cita.paciente_apellido }}</h3>
+              <p>Motivo: {{ cita.motivo_consulta }}</p>
+              <p class="cita-fecha">📅 {{ cita.fecha_cita | date:'dd/MM/yyyy' }} - {{ cita.hora_cita }}</p>
+              <span class="historial-status" [ngClass]="cita.estado">{{ cita.estado }}</span>
+            </div>
+            <div class="cita-actions">
+              <button class="btn-primary" (click)="handleIniciarConsulta(cita)">Iniciar Consulta</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mis Pacientes Section -->
+      <div *ngIf="activeSection === 'pacientes'" class="section-content">
+        <h2>Pacientes Atendidos</h2>
+        <div class="pacientes-list">
+          <div *ngIf="loadingPacientes">Cargando pacientes...</div>
+          <div *ngFor="let pte of pacientes" class="cita-card">
+             <div class="cita-info">
+                <h3>{{ pte.nombres }} {{ pte.apellidos }}</h3>
+                <p>DNI: {{ pte.dni }}</p>
+                <p>Última visita: {{ pte.ultima_cita | date:'dd/MM/yyyy' }}</p>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Perfil Section -->
+      <div *ngIf="activeSection === 'perfil'" class="section-content">
+        <div class="perfil-card">
+          <div class="perfil-header">
+            <div class="avatar">👨‍⚕️</div>
+            <h3>Dr. {{ user?.nombre }} {{ user?.apellidos }}</h3>
+            <p>{{ especialidadNombre }}</p>
+          </div>
+          <div class="perfil-info">
+            <div class="info-item"><label>Email:</label><span>{{ user?.email }}</span></div>
+            <div class="info-item"><label>Especialidad:</label><span>{{ especialidadNombre }}</span></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de Consulta (Simplified) -->
+  <div class="payment-modal-overlay" *ngIf="showConsultaModal" (click)="showConsultaModal = false">
+    <div class="payment-modal consulta-modal" (click)="$event.stopPropagation()">
+      <div class="payment-modal-header">
+        <h3>🩺 Consulta Médica - {{ consultaActual?.paciente_nombre }}</h3>
+        <button class="close-modal" (click)="showConsultaModal = false">✕</button>
+      </div>
+      <div class="payment-modal-body">
+         <div class="consulta-steps">
+            <button (click)="consultaStep = 1" [class.active]="consultaStep === 1">1. Triaje</button>
+            <button (click)="consultaStep = 2" [class.active]="consultaStep === 2">2. Consulta</button>
+            <button (click)="consultaStep = 3" [class.active]="consultaStep === 3">3. Receta</button>
+         </div>
+
+         <div *ngIf="consultaStep === 1">
+            <div class="form-row">
+              <div class="form-group"><label>Peso (kg)</label><input type="text" [(ngModel)]="consultaForm.peso" name="peso" /></div>
+              <div class="form-group"><label>Talla (cm)</label><input type="text" [(ngModel)]="consultaForm.talla" name="talla" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Presión</label><input type="text" [(ngModel)]="consultaForm.presion_arterial" name="presion" /></div>
+              <div class="form-group"><label>Temp (°C)</label><input type="text" [(ngModel)]="consultaForm.temperatura" name="temp" /></div>
+            </div>
+         </div>
+
+         <div *ngIf="consultaStep === 2">
+            <div class="form-group"><label>Síntomas</label><textarea [(ngModel)]="consultaForm.sintomas" name="sintomas"></textarea></div>
+            <div class="form-group">
+               <label>Diagnóstico</label>
+               <div style="display: flex; gap: 10px;">
+                  <input type="text" [(ngModel)]="nuevoDiagnostico" name="nDiag" (keyup.enter)="handleAgregarDiagnostico()" />
+                  <button type="button" (click)="handleAgregarDiagnostico()" class="btn-primary">+</button>
+               </div>
+               <ul><li *ngFor="let d of diagnosticosList">{{ d }}</li></ul>
+            </div>
+         </div>
+
+         <div *ngIf="consultaStep === 3">
+            <div class="form-group">
+               <label>Medicamentos</label>
+               <input type="text" [(ngModel)]="nuevoMedicamento.nombre" placeholder="Nombre" />
+               <input type="text" [(ngModel)]="nuevoMedicamento.dosis" placeholder="Dosis" />
+               <button type="button" (click)="handleAgregarMedicamento()" class="btn-primary">Añadir</button>
+               <ul><li *ngFor="let m of medicamentosList">{{ m.nombre }} - {{ m.dosis }}</li></ul>
+            </div>
+         </div>
+      </div>
+      <div class="payment-modal-footer">
+        <button class="btn-secondary" (click)="showConsultaModal = false">Cerrar</button>
+        <button class="btn-primary" (click)="handleSubmitConsulta()">Guardar Consulta</button>
+      </div>
+    </div>
+  </div>
+</div>
