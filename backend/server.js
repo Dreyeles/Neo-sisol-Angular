@@ -1,18 +1,18 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import db from './config/database.js';
+import db from './src/config/database.js';
 
 // Importar rutas
-import authRoutes from './routes/auth.js';
-import especialidadesRoutes from './routes/especialidades.js';
-import medicoRoutes from './routes/medicos.js';
-import citaRoutes from './routes/citas.js';
-import pagosRoutes from './routes/pagos.js';
-import atencionRoutes from './routes/atencion.js';
-import pacienteRoutes from './routes/pacientes.js';
-import serviciosRoutes from './routes/servicios.js';
-import archivosRoutes from './routes/archivos.js';
+import authRoutes from './src/routes/auth.js';
+import especialidadesRoutes from './src/routes/especialidades.js';
+import medicoRoutes from './src/routes/medicos.js';
+import citaRoutes from './src/routes/citas.js';
+import pagosRoutes from './src/routes/pagos.js';
+import atencionRoutes from './src/routes/atencion.js';
+import pacienteRoutes from './src/routes/pacientes.js';
+import serviciosRoutes from './src/routes/servicios.js';
+import archivosRoutes from './src/routes/archivos.js';
 
 dotenv.config();
 
