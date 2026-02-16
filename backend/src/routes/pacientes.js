@@ -140,4 +140,5 @@ router.get('/perfil-medico/:id_paciente', async (req, res) => {
     }
 });
 
+
 export default router;

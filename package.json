@@ -4,11 +4,16 @@
     "description": "Script para ejecutar frontend y backend simultáneamente",
     "scripts": {
         "start:backend": "cd backend && npm run dev",
-        "start:frontend": "cd frontend && npm start",
+        "start:proxy": "node proxy.js",
         "open:opera": "start opera http://localhost:4200",
-        "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\" \"npm run open:opera\""
+        "start": "concurrently \"npm run start:backend\" \"npm run start:proxy\" \"npm run open:opera\"",
+        "dev:frontend": "cd frontend && npm start"
     },
     "dependencies": {
         "concurrently": "^8.2.2"
+    },
+    "devDependencies": {
+        "express": "^5.2.1",
+        "http-proxy-middleware": "^3.0.5"
     }
 }
